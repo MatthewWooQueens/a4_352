@@ -65,6 +65,11 @@ class RegressionModel(object):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        self.A = nn.Parameter(1,1) #Ampl
+        self.B = nn.Parameter(1,1) #Freq
+        self.C = nn.Parameter(1,1)
+        self.D = nn.Parameter(1,1)
+        self.Learn = 0.5
 
     def run(self, x):
         """
@@ -76,7 +81,16 @@ class RegressionModel(object):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** YOUR CODE HERE ***"
-
+        print(x)
+        print("-------------------------------")
+        x = nn.ReLU(x)
+        xb = nn.AddBias(x, self.B)
+        xa = nn.AddBias(xb,self.A)
+        xc = nn.AddBias(xa,self.C)
+        predicted_y = nn.AddBias(xc,self.D)
+        return predicted_y
+        #dont use dot product
+        
     def get_loss(self, x, y):
         """
         Computes the loss for a batch of examples.
@@ -88,12 +102,26 @@ class RegressionModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
-
+        pred = self.run(x)
+        return nn.SquareLoss(pred,y)
+        #USe squareloss
     def train_model(self, dataset):
         """
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
+        BestFit = False
+        while not BestFit:
+            for x, y in dataset.iterate_once(10):
+                loss = self.get_loss(x,y)
+                if(nn.as_scalar(loss) > 0.02):
+                    grad_A,grad_B,grad_C,grad_D = nn.gradients([self.A,self.B,self.C,self.D],loss)
+                    self.A.update(self.Learn, grad_A)
+                    self.B.update(self.Learn, grad_B)
+                    self.C.update(self.Learn, grad_C)
+                    self.D.update(self.Learn, grad_D)
+                else:
+                    BestFit = True
 
 class DigitClassificationModel(object):
     """
