@@ -65,13 +65,15 @@ class RegressionModel(object):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
-        self.W1 = nn.Parameter(1,20) #1st layer
-        self.b1 = nn.Parameter(1,20) 
-        self.W2 = nn.Parameter(40,1) #3rd layer
+        self.W1 = nn.Parameter(1,10) #1st layer
+        self.b1 = nn.Parameter(1,10) 
+        self.W2 = nn.Parameter(50,1) #3rd layer
         self.b2 = nn.Parameter(1,1)
-        self.W3 = nn.Parameter(20,40) #2nd layer
-        self.b3 = nn.Parameter(1,40)
-        self.Learn = 0.05
+        self.W3 = nn.Parameter(10,30) #2nd layer
+        self.b3 = nn.Parameter(1,30)
+        self.W4 = nn.Parameter(30,50) #4th layer
+        self.b4 = nn.Parameter(1,50)
+        self.Learn = -0.001
 
     def run(self, x):
         """
@@ -93,7 +95,11 @@ class RegressionModel(object):
         xf = nn.AddBias(xe, self.b3)
         x4 = nn.ReLU(xf)
 
-        xc = nn.Linear(x4, self.W2)
+        xg = nn.Linear(x4, self.W4)
+        xh = nn.AddBias(xg, self.b4)
+        x5 = nn.ReLU(xh)
+
+        xc = nn.Linear(x5, self.W2)
         xd = nn.AddBias(xc, self.b2)
         predicted_y = xd
         return predicted_y
@@ -120,18 +126,25 @@ class RegressionModel(object):
         "*** YOUR CODE HERE ***"
         BestFit = False
         while not BestFit:
-            for x, y in dataset.iterate_once(20):
+            total_loss = 0
+            total_batches = 0
+            for x, y in dataset.iterate_once(25):
+                total_batches += 1
                 loss = self.get_loss(x,y)
-                if(nn.as_scalar(loss) > 0.02):
-                    grad_W1,grad_b1,grad_W2,grad_b2,grad_W3,grad_b3 = nn.gradients([self.W1,self.b1,self.W2,self.b2,self.W3,self.b3],loss)
-                    self.W1.update(-self.Learn, grad_W1)
-                    self.b1.update(-self.Learn, grad_b1)
-                    self.W2.update(-self.Learn, grad_W2)
-                    self.b2.update(-self.Learn, grad_b2)
-                    self.W3.update(-self.Learn, grad_W3)
-                    self.b3.update(-self.Learn, grad_b3)
-                else:
-                    BestFit = True
+                total_loss += nn.as_scalar(loss)
+                params = [self.W1,self.b1,self.W2,self.b2,self.W3,self.b3,self.W4,self.b4]
+                grad_W1,grad_b1,grad_W2,grad_b2,grad_W3,grad_b3,grad_W4,grad_b4 = nn.gradients(params,loss)
+                self.W1.update(self.Learn, grad_W1)
+                self.b1.update(self.Learn, grad_b1)
+                self.W2.update(self.Learn, grad_W2)
+                self.b2.update(self.Learn, grad_b2)
+                self.W3.update(self.Learn, grad_W3)
+                self.b3.update(self.Learn, grad_b3)
+                self.W4.update(self.Learn, grad_W4)
+                self.b4.update(self.Learn, grad_b4)
+            avg_loss = total_loss / total_batches
+            if avg_loss <= 0.02:
+                BestFit = True
 
 class DigitClassificationModel(object):
     """
