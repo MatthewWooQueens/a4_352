@@ -65,11 +65,13 @@ class RegressionModel(object):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
-        self.A = nn.Parameter(1,1) #Ampl
-        self.B = nn.Parameter(1,1) #Freq
-        self.C = nn.Parameter(1,1)
-        self.D = nn.Parameter(1,1)
-        self.Learn = 0.5
+        self.W1 = nn.Parameter(1,20) #1st layer
+        self.b1 = nn.Parameter(1,20) 
+        self.W2 = nn.Parameter(40,1) #3rd layer
+        self.b2 = nn.Parameter(1,1)
+        self.W3 = nn.Parameter(20,40) #2nd layer
+        self.b3 = nn.Parameter(1,40)
+        self.Learn = 0.05
 
     def run(self, x):
         """
@@ -83,11 +85,17 @@ class RegressionModel(object):
         "*** YOUR CODE HERE ***"
         print(x)
         print("-------------------------------")
-        x = nn.ReLU(x)
-        xb = nn.AddBias(x, self.B)
-        xa = nn.AddBias(xb,self.A)
-        xc = nn.AddBias(xa,self.C)
-        predicted_y = nn.AddBias(xc,self.D)
+        xa = nn.Linear(x, self.W1)
+        xb = nn.AddBias(xa, self.b1)
+        xx = nn.ReLU(xb)
+        
+        xe = nn.Linear(xx, self.W3)
+        xf = nn.AddBias(xe, self.b3)
+        x4 = nn.ReLU(xf)
+
+        xc = nn.Linear(x4, self.W2)
+        xd = nn.AddBias(xc, self.b2)
+        predicted_y = xd
         return predicted_y
         #dont use dot product
         
@@ -112,14 +120,16 @@ class RegressionModel(object):
         "*** YOUR CODE HERE ***"
         BestFit = False
         while not BestFit:
-            for x, y in dataset.iterate_once(10):
+            for x, y in dataset.iterate_once(20):
                 loss = self.get_loss(x,y)
                 if(nn.as_scalar(loss) > 0.02):
-                    grad_A,grad_B,grad_C,grad_D = nn.gradients([self.A,self.B,self.C,self.D],loss)
-                    self.A.update(self.Learn, grad_A)
-                    self.B.update(self.Learn, grad_B)
-                    self.C.update(self.Learn, grad_C)
-                    self.D.update(self.Learn, grad_D)
+                    grad_W1,grad_b1,grad_W2,grad_b2,grad_W3,grad_b3 = nn.gradients([self.W1,self.b1,self.W2,self.b2,self.W3,self.b3],loss)
+                    self.W1.update(-self.Learn, grad_W1)
+                    self.b1.update(-self.Learn, grad_b1)
+                    self.W2.update(-self.Learn, grad_W2)
+                    self.b2.update(-self.Learn, grad_b2)
+                    self.W3.update(-self.Learn, grad_W3)
+                    self.b3.update(-self.Learn, grad_b3)
                 else:
                     BestFit = True
 
