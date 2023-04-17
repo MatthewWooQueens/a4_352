@@ -135,7 +135,7 @@ class RegressionModel(object):
                 self.W3.update(-self.Learn, grad_W3)
                 self.B3.update(-self.Learn, grad_b3)
 
-            if(totalLoss/count < 0.02):
+            if(totalLoss/count < 0.001):
                 BestFit = True
 
 class DigitClassificationModel(object):
@@ -155,6 +155,15 @@ class DigitClassificationModel(object):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        self.W1 = nn.Parameter(784,150)
+        self.B1 = nn.Parameter(1,150)
+        self.W2 = nn.Parameter(150,50)
+        self.B2 = nn.Parameter(1,50)
+        self.W3 = nn.Parameter(50,15)
+        self.B3 = nn.Parameter(1,15)
+        self.W4 = nn.Parameter(15,10)
+        self.B4 = nn.Parameter(1,10)
+        self.Learn = -0.1
 
     def run(self, x):
         """
@@ -171,6 +180,11 @@ class DigitClassificationModel(object):
                 (also called logits)
         """
         "*** YOUR CODE HERE ***"
+        L1 = nn.ReLU(nn.AddBias(nn.Linear(x,self.W1),self.B1))
+        L2 = nn.ReLU(nn.AddBias(nn.Linear(L1,self.W2),self.B2))
+        L3 = nn.ReLU(nn.AddBias(nn.Linear(L2,self.W3),self.B3))
+        pred = nn.AddBias(nn.Linear(L3,self.W4),self.B4)
+        return pred
 
     def get_loss(self, x, y):
         """
@@ -186,10 +200,27 @@ class DigitClassificationModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        pred = self.run(x)
+        return nn.SoftmaxLoss(pred, y)
 
     def train_model(self, dataset):
         """
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
+        BestFit = False
+        while not BestFit:
+            for x, y in dataset.iterate_once(200):
+                loss = self.get_loss(x,y)
+                grad_W1,grad_b1,grad_W2,grad_b2,grad_W3,grad_b3,grad_W4,grad_b4 = nn.gradients([self.W1,self.B1,self.W2,self.B2,self.W3,self.B3,self.W4,self.B4],loss)
+                self.W1.update(self.Learn, grad_W1)
+                self.B1.update(self.Learn, grad_b1)
+                self.W2.update(self.Learn, grad_W2)
+                self.B2.update(self.Learn, grad_b2)
+                self.W3.update(self.Learn, grad_W3)
+                self.B3.update(self.Learn, grad_b3)
+                self.W4.update(self.Learn, grad_W4)
+                self.B4.update(self.Learn, grad_b4)
 
+            if(dataset.get_validation_accuracy() > 0.975):
+                BestFit = True
