@@ -159,9 +159,9 @@ class DigitClassificationModel(object):
         self.B1 = nn.Parameter(1,150)
         self.W2 = nn.Parameter(150,50)
         self.B2 = nn.Parameter(1,50)
-        self.W3 = nn.Parameter(50,15)
-        self.B3 = nn.Parameter(1,15)
-        self.W4 = nn.Parameter(15,10)
+        self.W3 = nn.Parameter(50,50)
+        self.B3 = nn.Parameter(1,50)
+        self.W4 = nn.Parameter(50,10)
         self.B4 = nn.Parameter(1,10)
         self.Learn = -0.1
 
@@ -209,8 +209,10 @@ class DigitClassificationModel(object):
         """
         "*** YOUR CODE HERE ***"
         BestFit = False
+        epoch = 0
         while not BestFit:
-            for x, y in dataset.iterate_once(200):
+            epoch+=1
+            for x, y in dataset.iterate_once(75):
                 loss = self.get_loss(x,y)
                 grad_W1,grad_b1,grad_W2,grad_b2,grad_W3,grad_b3,grad_W4,grad_b4 = nn.gradients([self.W1,self.B1,self.W2,self.B2,self.W3,self.B3,self.W4,self.B4],loss)
                 self.W1.update(self.Learn, grad_W1)
@@ -224,3 +226,7 @@ class DigitClassificationModel(object):
 
             if(dataset.get_validation_accuracy() > 0.975):
                 BestFit = True
+        print("Epoch: " + str(epoch))
+
+
+#10:15:45
